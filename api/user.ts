@@ -8,11 +8,27 @@ import path from "path";
 export const router = express.Router();
 
 router.get("/", (req, res) => {
-  conn.query("select * from User_En", (err, result, fields) => {
+  conn.query("SELECT User_En.id, User_En.code, User_En.fname, User_En.lname, Prefix.name as type, User_En.nickname, (YEAR(NOW()) - YEAR(birthday)) as birthday FROM User_En, Prefix where User_En.type = Prefix.id", (err, result, fields) => {
     res.json(result);
   });
 });
 
+router.get("/search/:search", (req, res) => {
+  const search = `%${req.params.search}%`
+  console.log(search)
+  conn.query(
+    "SELECT User_En.id, User_En.code, User_En.fname, User_En.lname, Prefix.name as type, User_En.nickname, (YEAR(NOW()) - YEAR(User_En.birthday)) as birthday FROM User_En JOIN Prefix ON User_En.type = Prefix.id WHERE User_En.code LIKE ? OR User_En.fname LIKE ? OR User_En.lname LIKE ? OR User_En.nickname LIKE ?",
+    [search, search, search, search],
+    (err, result) => {
+      if(err) {
+        res.json(err)
+      }else {
+        console.log("OK");
+        res.json(result);
+      }
+    }
+  );
+});
 
 router.get("/idx", (req, res) => {
   // conn.query("select * from Users where id = " + req.query.id, (err, result, fields)=>{
@@ -20,7 +36,7 @@ router.get("/idx", (req, res) => {
   // })
   if (req.query.id) {
     conn.query(
-      "select * from User_En where id = " + req.query.id,
+      "SELECT User_En.id, User_En.code, User_En.fname, User_En.lname, Prefix.name as type, User_En.nickname, (YEAR(NOW()) - YEAR(User_En.birthday)) as birthday FROM User_En JOIN Prefix ON User_En.type = Prefix.id WHERE User_En.id =" + req.query.id,
       (err, result, fields) => {
         res.json(result);
       }
